@@ -29,7 +29,7 @@ public class LeaseAgreement extends Product {
 		this.monthlyCost = monthlyCost;
 		this.deposit = deposit;
 	}
-	
+
 	public LeaseAgreement(String productCode, String type, String moveinDate, String moveOutDate, Address address,
 			Customer customer, double deposit, double monthlyCost) {
 		super(productCode, type);
@@ -142,29 +142,33 @@ public class LeaseAgreement extends Product {
 
 		int gapMonthsOut = moveOutDiff.getMonths();
 		int gapYearsOut = moveOutDiff.getYears();
-		
-		BigDecimal bd;
+
+		double bd;
 
 		if (gapMonthsIn == 0 && gapYearsIn == 0) {
-			bd = new BigDecimal((monthlyCost + ((((startDate.getMonth().length(false) - startDate.getDayOfMonth())
-					/ startDate.getMonth().length(false)) * monthlyCost) + deposit) * this.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+			bd = (startDate.getMonth().length(false) - startDate.getDayOfMonth())
+					/ (double) startDate.getMonth().length(false);
+
+			bd *= monthlyCost;
+			bd += deposit;
+			bd += monthlyCost;
+			bd *= this.getQuantity();
 
 		} else if (gapMonthsOut == 0 && gapYearsOut == 0) {
 
-			bd = new BigDecimal((((monthlyCost * (endDate.getDayOfMonth() / endDate.getMonth().length(false))) - deposit)
-					* getQuantity())).setScale(2, RoundingMode.HALF_UP);
+			bd = (((monthlyCost * (endDate.getDayOfMonth() / (double) endDate.getMonth().length(false))) - deposit)
+					* getQuantity());
 
 		} else {
 
-			bd = new BigDecimal((getQuantity() * monthlyCost)).setScale(2, RoundingMode.HALF_UP);
+			bd = (getQuantity() * monthlyCost);
 		}
-		
-		return bd.doubleValue();
+
+		return bd;
 	}
-	
 
 	public double getTax(LocalDate invoiceDate) {
-		
+
 		BigDecimal bd = new BigDecimal((0.06 * getSubtotal(invoiceDate))).setScale(2, RoundingMode.HALF_UP);
 		return bd.doubleValue();
 	}

@@ -15,7 +15,7 @@ import driver.Connector;
 
 public class Invoice {
 
-	//A logger to report errors
+	// A logger to report errors
 	public static Logger log = Logger.getLogger(Invoice.class);
 
 	private String invoiceCode;
@@ -26,6 +26,13 @@ public class Invoice {
 	private ArrayList<Product> products;
 	private ArrayList<Integer> quantity;
 	private int productCount;
+
+	// Variables to print out
+	private double total;
+	private double subtotal;
+	private double taxes;
+	private double totalDiscount;
+	private double fees;
 
 	// Constructor
 	public Invoice(String invoiceCode, LocalDate date, Customer customer, Person realtor, ArrayList<Product> products,
@@ -39,8 +46,7 @@ public class Invoice {
 		this.quantity = quantity;
 		this.productCount = productCount;
 	}
-	
-	
+
 	public Invoice(String invoiceCode, String invoiceDate, Customer customer, Person realtor,
 			ArrayList<Product> products) {
 		super();
@@ -50,8 +56,9 @@ public class Invoice {
 		this.realtor = realtor;
 		this.products = products;
 	}
-	
-	public Invoice(String invoiceCode, LocalDate date, Customer customer, Person realtor, ArrayList<Product> products, int productCount) {
+
+	public Invoice(String invoiceCode, LocalDate date, Customer customer, Person realtor, ArrayList<Product> products,
+			int productCount) {
 		super();
 		this.invoiceCode = invoiceCode;
 		this.date = date;
@@ -63,11 +70,49 @@ public class Invoice {
 
 	// Getters and Setters
 
+	public double getTotal() {
+		return total;
+	}
+
+	public void setTotal(double total) {
+		this.total = total;
+	}
+
+	public double getSubtotal() {
+		return subtotal;
+	}
+
+	public void setSubtotal(double subtotal) {
+		this.subtotal = subtotal;
+	}
+
+	public double getTaxes() {
+		return taxes;
+	}
+
+	public void setTaxes(double taxes) {
+		this.taxes = taxes;
+	}
+
+	public double getTotalDiscount() {
+		return totalDiscount;
+	}
+
+	public void setTotalDiscount(double totalDiscount) {
+		this.totalDiscount = totalDiscount;
+	}
+
+	public double getFees() {
+		return fees;
+	}
+
+	public void setFees(double fees) {
+		this.fees = fees;
+	}
+
 	public String getInvoiceDate() {
 		return invoiceDate;
 	}
-
-
 
 	public void setInvoiceDate(String invoiceDate) {
 		this.invoiceDate = invoiceDate;
@@ -128,21 +173,30 @@ public class Invoice {
 	public void setQuantity(ArrayList<Integer> quantity) {
 		this.quantity = quantity;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Invoice [invoiceCode=" + invoiceCode + ", invoiceDate=" + invoiceDate + ", date=" + date + ", customer="
 				+ customer + ", realtor=" + realtor + ", products=" + products + ", quantity=" + quantity
 				+ ", productCount=" + productCount + "]";
 	}
-	
+
+	public void print() {
+		System.out.println(String.format("%-10s %-42s %-25s  %20.2f $ %10.2f $ %15.2f $ %10.2f $ %15.2f $",
+				this.getInvoiceCode(), this.getCustomer().getName() + " " + this.getCustomer().getModifiedType(),
+				this.getRealtor().getFullName(), this.subtotal, this.fees, this.taxes, this.totalDiscount, this.total)); // Certain
+																															// string
+		// formatting
+	}
+
 	public static Set<Invoice> getInvoices(Map<String, Person> personMap, Map<String, Customer> customerMap,
 			Map<String, Product> productMap) {
 
-		//Creates a connection to the database
+		// Creates a connection to the database
 		Connection connection = Connector.getConnection();
 
-		//Constructs a query statement for obtaining detailed information about the invoices from the database
+		// Constructs a query statement for obtaining detailed information about the
+		// invoices from the database
 		String query = "SELECT i.invoiceCode, i.invoiceDate, c.customerCode, p.personCode, prod.productCode, item.units, item.agreement"
 				+ " FROM Invoice i " + "JOIN Customer c ON c.customerId = i.customerId"
 				+ " JOIN Person p ON p.personId = i.realtorId"
@@ -156,15 +210,15 @@ public class Invoice {
 		Set<Invoice> invoices = new HashSet<Invoice>();
 		Product product = null;
 		int productCount = 0;
-		
-		//Loads information from the database about its invoices, one line at a time.
+
+		// Loads information from the database about its invoices, one line at a time.
 		try {
-			
+
 			ps = connection.prepareStatement(query);
 			rs = ps.executeQuery();
 
 			while (rs.next()) {
-				
+
 				if (invoice != null && invoice.invoiceCode.equals(rs.getString("invoiceCode"))) {
 					productCount = 0;
 
@@ -172,74 +226,83 @@ public class Invoice {
 					String agreement = null;
 					Product ag = null;
 					int breaker = 0;
-					
-					for(Product p : invoice.products) {
-						if(p.getProductCode().equals(rs.getString("productCode"))) {
+
+					for (Product p : invoice.products) {
+						if (p.getProductCode().equals(rs.getString("productCode"))) {
 							int change = p.getQuantity();
 							change += rs.getInt("units");
 							p.setQuantity(change);
 							breaker = 1;
 						}
 					}
-					if(breaker == 1) {
+					if (breaker == 1) {
 						continue;
 					}
-					if(rs.getInt("agreement") != 0) {
+					if (rs.getInt("agreement") != 0) {
 						agreement = getProductCode(rs.getInt("agreement"));
 						for (Product Pr : invoice.products) {
-							if(Pr.getProductCode().equals(agreement)) {
+							if (Pr.getProductCode().equals(agreement)) {
 								ag = Pr;
 							}
-							//System.out.println("bottom of for loop");	
+							// System.out.println("bottom of for loop");
 						}
 					}
-					//System.out.println("before everything " + invoice.products.size());
-					
-					//A product of the correct type is constructed using the corresponding details pulled from the database
+					// System.out.println("before everything " + invoice.products.size());
+
+					// A product of the correct type is constructed using the corresponding details
+					// pulled from the database
 					if (product instanceof SaleAgreement) {
 						SaleAgreement S = (SaleAgreement) product;
-						SaleAgreement Sagreement = new SaleAgreement(S.getProductCode(), S.getType(), S.getDate(), S.getAddress(), S.gettotalCost(), S.getDownPayment(), S.getMonthlyPayment(), S.getPayableMonths(), S.getInterestRate());
+						SaleAgreement Sagreement = new SaleAgreement(S.getProductCode(), S.getType(), S.getDate(),
+								S.getAddress(), S.gettotalCost(), S.getDownPayment(), S.getMonthlyPayment(),
+								S.getPayableMonths(), S.getInterestRate());
 						Sagreement.setQuantity(rs.getInt("units"));
-						
+
 						invoice.products.add(Sagreement);
 						invoice.productCount++;
 					} else if (product instanceof LeaseAgreement) {
 						LeaseAgreement L = (LeaseAgreement) product;
-						LeaseAgreement Lagreement = new LeaseAgreement(L.getProductCode(), L.getType(), L.getStartDate(), L.getEndDate(), L.getAddress(), L.getCustomer(), L.getDeposit(), L.getMonthlyCost()); 
+						LeaseAgreement Lagreement = new LeaseAgreement(L.getProductCode(), L.getType(),
+								L.getStartDate(), L.getEndDate(), L.getAddress(), L.getCustomer(), L.getDeposit(),
+								L.getMonthlyCost());
 						Lagreement.setQuantity(rs.getInt("units"));
-						
+
 						invoice.products.add(Lagreement);
 						invoice.productCount++;
 					} else if (product instanceof ParkingPass) {
 						ParkingPass P = (ParkingPass) product;
 						ParkingPass pass = new ParkingPass(P.getProductCode(), P.getType(), P.getParkingFee());
 						pass.setQuantity(rs.getInt("units"));
-						
-						if(agreement != null) {
+
+						if (agreement != null) {
 							if (ag instanceof LeaseAgreement) {
 								LeaseAgreement Ls = (LeaseAgreement) ag;
-								LeaseAgreement newAgreement = new LeaseAgreement(Ls.getProductCode(), Ls.getType(), Ls.getStartDate(), Ls.getEndDate(), Ls.getAddress(), Ls.getCustomer(), Ls.getDeposit(), Ls.getMonthlyCost()); 
-								
+								LeaseAgreement newAgreement = new LeaseAgreement(Ls.getProductCode(), Ls.getType(),
+										Ls.getStartDate(), Ls.getEndDate(), Ls.getAddress(), Ls.getCustomer(),
+										Ls.getDeposit(), Ls.getMonthlyCost());
+
 								newAgreement.setQuantity(ag.getQuantity());
 
 								pass.setProduct(newAgreement);
 							} else if (ag instanceof SaleAgreement) {
 								SaleAgreement Ss = (SaleAgreement) ag;
-								SaleAgreement newSAgreement = new SaleAgreement(Ss.getProductCode(), Ss.getType(), Ss.getDate(), Ss.getAddress(), Ss.gettotalCost(), Ss.getDownPayment(), Ss.getMonthlyPayment(), Ss.getPayableMonths(), Ss.getInterestRate());
+								SaleAgreement newSAgreement = new SaleAgreement(Ss.getProductCode(), Ss.getType(),
+										Ss.getDate(), Ss.getAddress(), Ss.gettotalCost(), Ss.getDownPayment(),
+										Ss.getMonthlyPayment(), Ss.getPayableMonths(), Ss.getInterestRate());
 								newSAgreement.setQuantity(ag.getQuantity());
 
 								pass.setProduct(newSAgreement);
 							}
 
 						}
-						
+
 						invoice.products.add(pass);
 						invoice.productCount++;
 					} else if (product instanceof Amenity) {
 						Amenity A = (Amenity) product;
 						Amenity amenity = new Amenity(A.getProductCode(), A.getType(), A.getName(), A.getCost());
 						amenity.setQuantity(rs.getInt("units"));
-						
+
 						invoice.products.add(amenity);
 						invoice.productCount++;
 					}
@@ -252,90 +315,99 @@ public class Invoice {
 
 					ArrayList<Product> products = new ArrayList<Product>();
 
-					//A product of the correct type is constructed using the corresponding details pulled from the database, for the new invoice
+					// A product of the correct type is constructed using the corresponding details
+					// pulled from the database, for the new invoice
 					product = productMap.get(rs.getString("productCode"));
 					String agreement = null;
 					Product ag = null;
-					if(rs.getInt("agreement") != 0) {
+					if (rs.getInt("agreement") != 0) {
 						agreement = getProductCode(rs.getInt("agreement"));
 					}
-					
+
 					for (Product Pr : products) {
-						if(Pr.getProductCode().equals(agreement)) {
+						if (Pr.getProductCode().equals(agreement)) {
 							ag = Pr;
 						}
 					}
 
 					if (product instanceof SaleAgreement) {
 						SaleAgreement S = (SaleAgreement) product;
-						SaleAgreement Sagreement = new SaleAgreement(S.getProductCode(), S.getType(), S.getDate(), S.getAddress(), S.gettotalCost(), S.getDownPayment(), S.getMonthlyPayment(), S.getPayableMonths(), S.getInterestRate());
+						SaleAgreement Sagreement = new SaleAgreement(S.getProductCode(), S.getType(), S.getDate(),
+								S.getAddress(), S.gettotalCost(), S.getDownPayment(), S.getMonthlyPayment(),
+								S.getPayableMonths(), S.getInterestRate());
 						Sagreement.setQuantity(rs.getInt("units"));
-						
+
 						products.add(Sagreement);
 						productCount++;
 					} else if (product instanceof LeaseAgreement) {
 						LeaseAgreement L = (LeaseAgreement) product;
-						LeaseAgreement Lagreement = new LeaseAgreement(L.getProductCode(), L.getType(), L.getStartDate(), L.getEndDate(), L.getAddress(), L.getCustomer(), L.getDeposit(), L.getMonthlyCost()); 
+						LeaseAgreement Lagreement = new LeaseAgreement(L.getProductCode(), L.getType(),
+								L.getStartDate(), L.getEndDate(), L.getAddress(), L.getCustomer(), L.getDeposit(),
+								L.getMonthlyCost());
 						Lagreement.setQuantity(rs.getInt("units"));
-						
+
 						products.add(Lagreement);
 						productCount++;
 					} else if (product instanceof ParkingPass) {
 						ParkingPass P = (ParkingPass) product;
 						ParkingPass pass = new ParkingPass(P.getProductCode(), P.getType(), P.getParkingFee());
 						pass.setQuantity(rs.getInt("units"));
-						
-						if(agreement != null) {
+
+						if (agreement != null) {
 							if (ag instanceof LeaseAgreement) {
 								LeaseAgreement Ls = (LeaseAgreement) ag;
-								LeaseAgreement newAgreement = new LeaseAgreement(Ls.getProductCode(), Ls.getType(), Ls.getStartDate(), Ls.getEndDate(), Ls.getAddress(), Ls.getCustomer(), Ls.getDeposit(), Ls.getMonthlyCost()); 
-								
+								LeaseAgreement newAgreement = new LeaseAgreement(Ls.getProductCode(), Ls.getType(),
+										Ls.getStartDate(), Ls.getEndDate(), Ls.getAddress(), Ls.getCustomer(),
+										Ls.getDeposit(), Ls.getMonthlyCost());
+
 								newAgreement.setQuantity(ag.getQuantity());
 
 								pass.setProduct(newAgreement);
 							} else if (ag instanceof SaleAgreement) {
 								SaleAgreement Ss = (SaleAgreement) ag;
-								SaleAgreement newSAgreement = new SaleAgreement(Ss.getProductCode(), Ss.getType(), Ss.getDate(), Ss.getAddress(), Ss.gettotalCost(), Ss.getDownPayment(), Ss.getMonthlyPayment(), Ss.getPayableMonths(), Ss.getInterestRate());
+								SaleAgreement newSAgreement = new SaleAgreement(Ss.getProductCode(), Ss.getType(),
+										Ss.getDate(), Ss.getAddress(), Ss.gettotalCost(), Ss.getDownPayment(),
+										Ss.getMonthlyPayment(), Ss.getPayableMonths(), Ss.getInterestRate());
 								newSAgreement.setQuantity(ag.getQuantity());
 
 								pass.setProduct(newSAgreement);
 							}
 
 						}
-						
+
 						products.add(pass);
 						productCount++;
 					} else if (product instanceof Amenity) {
 						Amenity A = (Amenity) product;
 						Amenity amenity = new Amenity(A.getProductCode(), A.getType(), A.getName(), A.getCost());
 						amenity.setQuantity(rs.getInt("units"));
-						
+
 						products.add(amenity);
 						productCount++;
 					}
 
-					
 					LocalDate date = LocalDate.parse(rs.getString("invoiceDate"));
-					
-					//A new invoice is created
-					invoice = new Invoice(rs.getString("invoiceCode"), date, customerMap.get(rs.getString("customerCode")),
-							personMap.get(rs.getString("personCode")), products, productCount);
+
+					// A new invoice is created
+					invoice = new Invoice(rs.getString("invoiceCode"), date,
+							customerMap.get(rs.getString("customerCode")), personMap.get(rs.getString("personCode")),
+							products, productCount);
 
 				}
 			}
-			
+
 			invoices.add(invoice);
 
 		} catch (SQLException sqle) {
-			
+
 			log.error("Connection was not succussful", sqle);
 			throw new RuntimeException(sqle);
-			
+
 		}
 
-		//Close the connections, preparedStatement and resultSet
+		// Close the connections, preparedStatement and resultSet
 		try {
-			
+
 			if (rs != null && !rs.isClosed()) {
 				rs.close();
 			}
@@ -345,17 +417,17 @@ public class Invoice {
 			if (connection != null && !connection.isClosed()) {
 				connection.close();
 			}
-			
+
 		} catch (SQLException sqle) {
-			
+
 			log.error("Connection was not closed successfully", sqle);
 			throw new RuntimeException(sqle);
-			
+
 		}
 
 		return invoices;
 	}
-	
+
 	/**
 	 * Returns the customerId associated with a specific customerCode
 	 * 
@@ -394,6 +466,5 @@ public class Invoice {
 
 		return productCode;
 	}
-
 
 }
