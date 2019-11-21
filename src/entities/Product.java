@@ -21,7 +21,7 @@ public abstract class Product {
 	private String productCode;
 	private String type;
 	private int quantity;
-	private LocalDate invoiceDate;
+	protected LocalDate invoiceDate;
 
 	// Primary Constructor
 	public Product(String productCode, String type) {

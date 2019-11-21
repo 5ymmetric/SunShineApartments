@@ -134,10 +134,10 @@ public class InvoiceReport {
 				// If statement to calculate subtotals
 				if (k.getType().equals("L")) {
 					LeaseAgreement m = (LeaseAgreement) k; // cast as lease agreement
-					subtotal = subtotal + m.getSubtotal(i.getDate()); // Subtotal method
+					subtotal = subtotal + m.getSubtotal(); // Subtotal method
 				} else if (k.getType().equals("S")) {
-					SaleAgreement m = (SaleAgreement) k; // Look to Sale agreements^^
-					subtotal = subtotal + m.getSubtotal(i.getDate());
+					SaleAgreement m = (SaleAgreement) k; // Look to lease agreements^^
+					subtotal = subtotal + m.getSubtotal();
 
 				} else if (k.getType().equals("A")) { // If amenities
 					for (Product j : i.getProducts()) {
@@ -155,33 +155,32 @@ public class InvoiceReport {
 					for (Product j : i.getProducts()) {
 						if ((j.getType().equals("L") || j.getType().equals("S")) && (parkingPassDiscountCounter > 0)) {
 							parkingPassDiscountCounter = parkingPassDiscountCounter - k.getQuantity(); // Subtracts the
-																										// free Parking
-																										// pass counter
+							// free Parking
+							// pass counter
 
 							ParkingPass m = (ParkingPass) k; // Cast to Parking pass
-
 							if (parkingPassDiscountCounter > 0) {
 								parkingPassDiscount = true;
 								break;
 							} else { // If more parking passes than free parking passes
 								parkingPassDiscount = true;
 								subtotal = subtotal + (m.getSubtotal1() * Math.abs(parkingPassDiscountCounter * 1.0)); // Gets
-																														// the
-																														// cost
-																														// of
-																														// the
-																														// difference
-																														// between
-																														// both
-																														// these
-																														// variables
+								// the
+								// cost
+								// of
+								// the
+								// difference
+								// between
+								// both
+								// these
+								// variables
 							}
 
 						}
 
 						if (parkingPassDiscount == false) {
 							subtotal = subtotal + k.getSubtotal() / 2; // Calculates subtotal if not associated with a
-																		// lease or sale
+							// lease or sale
 						}
 					}
 				}
@@ -189,17 +188,17 @@ public class InvoiceReport {
 				if (i.getCustomer().getType().equals("G")) { // Tax If statement
 					if (k.getType().equals("L")) {
 						LeaseAgreement m = (LeaseAgreement) k;
-						taxes = taxes + m.getTax(i.getDate()); // Gets taxes for lease Agreements
+						taxes = taxes + m.getTax(); // Gets taxes for lease Agreements
 					} else if (k.getType().equals("S")) {
 						SaleAgreement m = (SaleAgreement) k;
-						taxes = taxes + m.getTax(i.getDate()); // Look ^^ for sale also
+						taxes = taxes + m.getTax(); // Look ^^ for sale also
 					} else if (k.getType().equals("A")) {
 						if (amenityDiscount == false) { // If discount on Amenities hasn't been applied
 							taxes = taxes + k.getTax();
 						} else {
 							Amenity m = (Amenity) k;
 							taxes = taxes + m.getTax1(); // Special tax that uses the getSubtotal1() method to calculate
-															// tax
+							// tax
 						}
 					} else if (k.getType().equals("P")) { // If parkingPass
 						if (parkingPassDiscount == false) {
@@ -207,15 +206,15 @@ public class InvoiceReport {
 						} else if (parkingPassDiscountCounter < 0) {
 							ParkingPass m = (ParkingPass) k; //
 							taxes = taxes + (0.04 * m.getSubtotal1() * Math.abs(parkingPassDiscountCounter * 1.0));
-						} // Same equation to calculate the sub-total
+						} // Same equation to calculate the subtotal
 					}
 				}
 
 				if (i.getCustomer().getType().equals("L")) { // Discount counter
 					if (k.getType().equals("L") || k.getType().equals("S") && discounter == true) {
-						discount = discount - 1000; // $1000 for low income
+						discount = discount - 1000; // $1000 for lowincome
 						perDiscount = discount; // Discount is transferred over to this variable b/c discount is local
-												// to the products loop
+						// to the products loop
 						discounter = false;
 					}
 
@@ -230,13 +229,12 @@ public class InvoiceReport {
 				totalDiscount = discount + perDiscount; // Total discount added up
 				total = subtotal + fees + taxes + totalDiscount; // Total
 
-				i.setTotal(total);
-				i.setSubtotal(subtotal);
-				i.setFees(fees);
-				i.setTaxes(taxes);
-				i.setTotalDiscount(totalDiscount);
 			}
-
+			i.setTotal(total);
+			i.setTaxes(taxes);
+			i.setFees(fees);
+			i.setSubtotal(subtotal);
+			i.setTotalDiscount(totalDiscount);
 			newList.add(i);
 
 			// These are the total variables at the bottom
@@ -298,8 +296,8 @@ public class InvoiceReport {
 				if (i.getCustomer().getType().equals("G")) { // General customer printing
 					if (k.getType().equals("L")) {
 						LeaseAgreement l = (LeaseAgreement) k;
-						double subtotal = l.getSubtotal(i.getDate());
-						double tax = l.getTax(i.getDate());
+						double subtotal = l.getSubtotal();
+						double tax = l.getTax();
 						double total = subtotal + tax;
 						System.out.println(String.format("\n%-9s Lease Agreement @ %-56s %10.2f $   %11.2f $ %13.2f $",
 								k.getProductCode(), l.getAddress().getStreet(), subtotal, tax, total));
@@ -313,8 +311,8 @@ public class InvoiceReport {
 
 					} else if (k.getType().equals("S")) {
 						SaleAgreement s = (SaleAgreement) k;
-						double subtotal = s.getSubtotal(i.getDate());
-						double tax = s.getTax(i.getDate());
+						double subtotal = s.getSubtotal();
+						double tax = s.getTax();
 						double total = subtotal + tax;
 						int interest = (int) (s.getInterestRate() * s.getMonthlyPayment() / 100);
 
@@ -424,7 +422,7 @@ public class InvoiceReport {
 				} else if (i.getCustomer().getType().equals("L")) { // Customer type is L
 					if (k.getType().equals("L")) { // lease agreement checker
 						LeaseAgreement l = (LeaseAgreement) k;
-						double subtotal = l.getSubtotal(i.getDate());
+						double subtotal = l.getSubtotal();
 						double tax = 0.0;
 						double total = subtotal + tax;
 						System.out.println(String.format("\n%-9s Lease Agreement @ %-56s %10.2f $   %11.2f $ %13.2f $",
@@ -440,7 +438,7 @@ public class InvoiceReport {
 						// Lease Agreement necessities printed
 					} else if (k.getType().equals("S")) {
 						SaleAgreement s = (SaleAgreement) k;
-						double subtotal = s.getSubtotal(i.getDate());
+						double subtotal = s.getSubtotal();
 						double tax = 0.0;
 						double total = subtotal + tax;
 						int interest = (int) (s.getInterestRate() * s.getMonthlyPayment() / 100);
@@ -617,8 +615,8 @@ public class InvoiceReport {
 			if (i.getCustomer().getType().equals("G")) { // General customer printing
 				if (k.getType().equals("L")) {
 					LeaseAgreement l = (LeaseAgreement) k;
-					double subtotal = l.getSubtotal(i.getDate());
-					double tax = l.getTax(i.getDate());
+					double subtotal = l.getSubtotal();
+					double tax = l.getTax();
 					double total = subtotal + tax;
 					System.out.println(String.format("\n%-9s Lease Agreement @ %-56s %10.2f $   %11.2f $ %13.2f $",
 							k.getProductCode(), l.getAddress().getStreet(), subtotal, tax, total));
@@ -632,8 +630,8 @@ public class InvoiceReport {
 
 				} else if (k.getType().equals("S")) {
 					SaleAgreement s = (SaleAgreement) k;
-					double subtotal = s.getSubtotal(i.getDate());
-					double tax = s.getTax(i.getDate());
+					double subtotal = s.getSubtotal();
+					double tax = s.getTax();
 					double total = subtotal + tax;
 					int interest = (int) (s.getInterestRate() * s.getMonthlyPayment() / 100);
 
@@ -741,7 +739,7 @@ public class InvoiceReport {
 			} else if (i.getCustomer().getType().equals("L")) { // Customer type is L
 				if (k.getType().equals("L")) { // lease agreement checker
 					LeaseAgreement l = (LeaseAgreement) k;
-					double subtotal = l.getSubtotal(i.getDate());
+					double subtotal = l.getSubtotal();
 					double tax = 0.0;
 					double total = subtotal + tax;
 					System.out.println(String.format("\n%-9s Lease Agreement @ %-56s %10.2f $   %11.2f $ %13.2f $",
@@ -757,7 +755,7 @@ public class InvoiceReport {
 					// Lease Agreement necessities printed
 				} else if (k.getType().equals("S")) {
 					SaleAgreement s = (SaleAgreement) k;
-					double subtotal = s.getSubtotal(i.getDate());
+					double subtotal = s.getSubtotal();
 					double tax = 0.0;
 					double total = subtotal + tax;
 					int interest = (int) (s.getInterestRate() * s.getMonthlyPayment() / 100);

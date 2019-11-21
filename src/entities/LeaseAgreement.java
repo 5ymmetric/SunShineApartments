@@ -132,10 +132,10 @@ public class LeaseAgreement extends Product {
 		this.monthlyCost = monthlyCost;
 	}
 
-	public double getSubtotal(LocalDate invoiceDate) {
+	public double getSubtotal() {
 
-		Period moveInDiff = Period.between(startDate, invoiceDate);
-		Period moveOutDiff = Period.between(invoiceDate, endDate);
+		Period moveInDiff = Period.between(startDate, this.getInvoiceDate());
+		Period moveOutDiff = Period.between(this.getInvoiceDate(), endDate);
 
 		int gapMonthsIn = moveInDiff.getMonths();
 		int gapYearsIn = moveInDiff.getYears();
@@ -167,29 +167,15 @@ public class LeaseAgreement extends Product {
 		return bd;
 	}
 
-	public double getTax(LocalDate invoiceDate) {
-
-		BigDecimal bd = new BigDecimal((0.06 * getSubtotal(invoiceDate))).setScale(2, RoundingMode.HALF_UP);
-		return bd.doubleValue();
-	}
-
-	public double getDiscount(LocalDate invoiceDate) {
-		BigDecimal bd = new BigDecimal(((-.1) * getSubtotal(invoiceDate))).setScale(2, RoundingMode.HALF_UP);
-		return bd.doubleValue();
-	}
-
-	@Override
-	public double getSubtotal() {
-		return 0.0;
-	}
-
-	@Override
 	public double getTax() {
-		return 0.0;
+
+		double bd = (0.06 * getSubtotal());
+		return bd;
 	}
 
-	@Override
 	public double getDiscount() {
-		return 0.0;
+		double bd = (-.1) * getSubtotal();
+		return bd;
 	}
+
 }
